@@ -14,6 +14,7 @@ Rules:
 - Write short, clear sentences. Avoid hype words such as "revolutionary" or "game-changing".
 - The data is one snapshot. Never claim growth, a trend, a change over time or how a sector is doing.
 - Say "most" or "the majority" only for more than half of the group. Otherwise say "the largest group".
+- Never describe a group as complete unless the facts list all of it. Do not write "the remaining" or "the rest" about a list the facts cut short.
 - Write in full sentences. Never copy a list of figures separated by semicolons.
 - The title and h1 must both start with the primaryKeyword, capitalised as a heading.
 

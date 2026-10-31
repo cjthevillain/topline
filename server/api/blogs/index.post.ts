@@ -56,8 +56,9 @@ export default defineEventHandler(async (event) => {
     const slug = await uniqueSlug(baseSlug(analysis))
     const doc = buildDocument(analysis, result, slug, fileName, now.toISOString(), false)
     await saveBlog(doc)
+    const removalToken = await issueRemovalToken(slug)
     setResponseStatus(event, 201)
-    return { slug, url: `/blog/${slug}`, mode: result.mode, provider: result.provider, warnings: analysis.dataset.warnings }
+    return { slug, url: `/blog/${slug}`, removalToken, mode: result.mode, provider: result.provider, warnings: analysis.dataset.warnings }
   }
   catch (error) {
     if (error && typeof error === 'object' && 'statusCode' in error) throw error

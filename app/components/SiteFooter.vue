@@ -6,26 +6,47 @@ import { BRAND } from '#shared/brand'
   <footer class="foot">
     <div class="wrap grid">
       <div class="who">
-        <NuxtLink to="/" class="brand" :aria-label="`${BRAND.name} home`"><BrandWordmark :size="20" /></NuxtLink>
-        <p class="small muted">{{ BRAND.tagline }}.</p>
+        <NuxtLink to="/" class="brand" :aria-label="`${BRAND.name} home`"><BrandWordmark :size="22" /></NuxtLink>
+        <p>Every figure on every page is calculated from the source file. The copy is written afterwards and checked against those figures.</p>
       </div>
-      <nav aria-label="Footer" class="links">
-        <NuxtLink to="/">Published pages</NuxtLink>
-        <NuxtLink to="/generate">Generate a page</NuxtLink>
+      <nav aria-labelledby="foot-product">
+        <h2 id="foot-product">Product</h2>
+        <ul>
+          <li><NuxtLink to="/blog">Rankings</NuxtLink></li>
+          <li><NuxtLink to="/how-it-works">How it works</NuxtLink></li>
+          <li><NuxtLink to="/generate">Generate</NuxtLink></li>
+        </ul>
       </nav>
-      <p class="small muted note">Every figure on every page is calculated from the source file. Copy from an LLM is checked against those figures, and a data template takes over if the LLM fails.</p>
+      <nav aria-labelledby="foot-legal">
+        <h2 id="foot-legal">Legal</h2>
+        <ul>
+          <li><NuxtLink to="/privacy">Privacy</NuxtLink></li>
+          <li><NuxtLink to="/terms">Terms</NuxtLink></li>
+        </ul>
+      </nav>
+      <nav aria-labelledby="foot-more">
+        <h2 id="foot-more">More</h2>
+        <ul>
+          <li><a href="/feed.xml">RSS feed</a></li>
+          <li><a :href="BRAND.repo" rel="noopener">Source code</a></li>
+          <li><ThemeToggle /></li>
+        </ul>
+      </nav>
     </div>
   </footer>
 </template>
 
 <style scoped>
-.foot { margin-top: 120px; padding-block: 40px 48px; border-top: 1px solid var(--line); }
-.grid { display: grid; grid-template-columns: 1.2fr 0.8fr 1.4fr; gap: var(--space-xl); align-items: start; }
-.who { display: grid; gap: var(--space-sm); justify-items: start; }
-.brand { display: inline-flex; color: inherit; text-decoration: none; }
-.links { display: grid; gap: var(--space-xs); justify-items: start; }
-.links a { min-height: 32px; display: inline-flex; align-items: center; color: var(--ink); font-size: 15px; font-weight: 500; text-decoration: none; }
-.links a:hover { color: var(--accent); }
-.note { max-width: 46ch; }
-@media (max-width: 820px) { .grid { grid-template-columns: 1fr; gap: var(--space-lg); } .foot { margin-top: 88px; } }
+.foot { padding-block: 36px 44px; border-top: 1px solid var(--ink); font-size: 14px; }
+.grid { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 2fr) minmax(0, 2fr) minmax(0, 3fr); gap: var(--space-xl); }
+.who { display: grid; align-content: start; gap: 14px; color: var(--ink-2); }
+.who p { max-width: 42ch; }
+.brand { display: inline-flex; justify-self: start; color: var(--ink); }
+h2 { margin-bottom: var(--space-sm); font-size: 14px; font-weight: 600; letter-spacing: 0; }
+ul { display: grid; gap: var(--space-xs); }
+a:hover { color: var(--accent); }
+@media (max-width: 760px) {
+  .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .who { grid-column: 1 / -1; }
+}
 </style>

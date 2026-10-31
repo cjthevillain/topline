@@ -17,8 +17,8 @@ ${colours(tokens.colour).join('\n')}
 ${scale('space', tokens.space).join('\n')}
 ${scale('radius', tokens.radius).join('\n')}
   --motion-feedback: ${tokens.motion.feedback}ms;
-  --motion-state-change: ${tokens.motion['state-change']}ms;
-  --motion-reveal: ${tokens.motion.reveal}ms;
+  --motion-page: ${tokens.motion.page}ms;
+  --motion-hand-off: ${tokens.motion['hand-off']}ms;
   --easing: ${tokens.motion.easing};
 }
 

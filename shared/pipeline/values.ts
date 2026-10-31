@@ -154,6 +154,11 @@ export function formatExact(value: number, currency = ''): string {
   return `${sign}${currency}${Math.abs(value).toLocaleString('en-GB', { maximumFractionDigits: 2 })}`
 }
 
+/** `1,000`, so a count reads the same everywhere on a page. */
+export function formatCount(value: number): string {
+  return value.toLocaleString('en-GB')
+}
+
 export function formatPercent(value: number): string {
   return `${trimmed(value, 1)}%`
 }

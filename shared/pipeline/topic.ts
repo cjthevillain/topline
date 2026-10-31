@@ -13,9 +13,16 @@ export function inferContext(dataset: Dataset, fileName: string, typedTopic = ''
 
 function cleanTopic(text: string): string {
   const cleaned = text.replace(/\s+/g, ' ').replace(/[^\p{L}\p{N} &-]/gu, '').trim().slice(0, 40)
-  return cleaned
-    .split(' ')
-    .map(word => (SHOUTY.has(word.toLowerCase()) ? word.toUpperCase() : /^[A-Z]{2,}$/.test(word) ? word : word.toLowerCase()))
+  const words = cleaned.split(' ')
+  // A capital next to lower-case words is a name, as in "Berlin fintech".
+  const named = words.some(word => /^\p{Ll}/u.test(word))
+  return words
+    .map((word) => {
+      if (SHOUTY.has(word.toLowerCase())) return word.toUpperCase()
+      if (/^[A-Z]{2,}$/.test(word)) return word
+      if (UK_PLACES.test(word) || (named && /^\p{Lu}/u.test(word))) return `${word[0]!.toUpperCase()}${word.slice(1).toLowerCase()}`
+      return word.toLowerCase()
+    })
     .join(' ')
 }
 
