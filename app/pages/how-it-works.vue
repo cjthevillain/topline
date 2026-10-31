@@ -18,32 +18,43 @@ const steps = [
 </script>
 
 <template>
-  <div class="wrap page">
-    <h1>How it works</h1>
-    <p class="lede muted">The figures come from your file. The words come from an LLM, and they are checked against those figures before anything goes live.</p>
+  <div class="wrap">
+    <header class="page-head">
+      <h1>How it works</h1>
+      <p class="lede muted">The figures come from your file. The words come from an LLM, and they are checked against those figures before anything goes live.</p>
+    </header>
 
-    <ol class="steps">
-      <li v-for="step in steps" :key="step.title">
+    <ol class="list">
+      <li v-for="(step, i) in steps" :key="step.title" class="step">
+        <span class="step-no">0{{ i + 1 }}</span>
         <h2>{{ step.title }}</h2>
         <p>{{ step.body }}</p>
       </li>
     </ol>
 
-    <section class="prose limits">
+    <section class="limits band-grid">
       <h2>What the checks cannot do</h2>
       <p>The checks prove that each figure exists in your data. They cannot prove that a sentence uses it well, so read a page before you promote it. A page is also only as accurate as the file behind it.</p>
     </section>
+
+    <div class="start actions">
+      <NuxtLink to="/generate" class="btn">Generate a page</NuxtLink>
+      <NuxtLink to="/blog" class="btn btn-t">See the rankings</NuxtLink>
+    </div>
   </div>
 </template>
 
 <style scoped>
-.page { padding-block: 64px; }
-.lede { max-width: 56ch; margin-top: var(--space-md); }
-.steps { margin-top: var(--space-xxl); max-width: 66ch; }
-.steps li { padding-block: var(--space-lg); border-top: 1px solid var(--line); }
-.steps h2 { font-size: 24px; }
-.steps p { margin-top: var(--space-xs); }
-.limits { margin-top: var(--space-xxl); }
-.limits h2 { font-size: 24px; }
-.limits p { margin-top: var(--space-xs); }
+.list .step { grid-template-columns: 56px minmax(0, 3fr) minmax(0, 7fr); padding-block: var(--space-lg); }
+.list h2 { font-size: 20px; }
+.list p { max-width: 62ch; color: var(--ink); font-size: 16px; }
+.limits { grid-template-columns: 56px minmax(0, 3fr) minmax(0, 7fr); gap: 20px; padding-block: 40px; }
+.limits h2 { grid-column: 1 / 3; }
+.limits p { max-width: 62ch; }
+.start { padding-block: var(--space-xs) var(--space-xxxl); }
+@media (max-width: 760px) {
+  .list .step { grid-template-columns: 40px minmax(0, 1fr); }
+  .limits { grid-template-columns: minmax(0, 1fr); gap: var(--space-sm); }
+  .limits h2 { grid-column: auto; }
+}
 </style>

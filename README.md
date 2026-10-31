@@ -36,14 +36,24 @@ The same analysis code runs in the browser for the instant preview and on the se
 - **The upload cannot fail because of the LLM.** Providers are tried in order. A field that fails its checks is replaced by the matching field from a deterministic template, and the page says which path it took.
 - **No secrets in the browser.** LLM calls happen on the server, and keys come from environment variables.
 - **One brand file.** The product name and tagline live in `shared/brand.ts`, and every page, the JSON-LD and the manifest read from it.
-- **Design tokens drive both themes.** `design/tokens.json` holds the light values and the dark overrides. `pnpm tokens` writes `app/assets/css/tokens.css`. The theme toggle in the header remembers the choice, light is the default, and the inline script in `app/app.vue` applies it before the first paint.
-- **Motion never hides content.** Scroll reveals and counting numbers only run when JavaScript is on and the visitor has not asked for reduced motion. The HTML is complete without them.
+- **Design tokens drive both themes.** `design/tokens.json` holds the light values and the dark overrides. `pnpm tokens` writes `app/assets/css/tokens.css`. The theme toggle in the footer remembers the choice, light is the default, and the inline script in `app/app.vue` applies it before the first paint.
+- **Motion explains a change of page and does nothing else.** Page changes use the browser's View Transitions API through Nuxt, with no animation library. The header stays still and a ranking's title and figure move from the list to their place on the page. Ranking data loads before the transition starts, because the browser freezes the page during one. Visitors who ask for reduced motion get a plain crossfade. There are no scroll reveals, so the HTML is complete without JavaScript.
 - **Claude Haiku 5.5 writes the copy.** It is fast, costs under a tenth of a cent per page, and the API enforces the JSON shape of the reply. It runs at low effort, and a refusal or an error moves on to the next provider.
 - **Gemini is optional, not the default.** Google's Gemini API terms say services offered to users in the UK, EEA or Switzerland must use paid quota, so the free tier cannot serve this site.
 
+## Production details
+
+- **Metadata.** Every page sets its title, description, canonical address, Open Graph and Twitter tags. Ranking pages add BlogPosting, Dataset, ItemList, BreadcrumbList and FAQPage structured data. The site serves `sitemap.xml`, `robots.txt`, `feed.xml` and `llms.txt`.
+- **Brand files.** The logo is one set of paths in `shared/logo.ts`. `pnpm brand` draws the favicons, app icons, maskable icon and default social image from it, and `public/site.webmanifest` lists them.
+- **Social images.** `/og/<slug>.png` draws a 1200 by 630 card for each page with its title and headline figure. The image is stored after the first request, removed with its page, and replaced by `/og.png` if drawing fails.
+- **Security.** A Content Security Policy with a new nonce on every response, plus HSTS and the usual browser headers, set in `server/plugins/security.ts`. Spreadsheet formulas are neutralised in CSV downloads. `/.well-known/security.txt` gives a contact.
+- **Removal.** Publishing returns a private token, kept in the browser, that lets the person who uploaded a page remove it. Every page also has a link to report it.
+- **Legal pages.** `/privacy` and `/terms` describe what the site really stores and which providers see data.
+- **Analytics.** Optional. Set the two Umami variables to load a cookie-free script. It is off by default and the Content Security Policy only allows that origin when it is set.
+
 ## Tools used
 
-Nuxt 4, Vue 3, TypeScript, Papa Parse, Vitest, Playwright, Docker, Coolify, and Claude Haiku 5.5 through the Anthropic SDK. Groq, Ollama and Gemini also work as providers.
+Nuxt 4, Vue 3, TypeScript, Papa Parse, Satori and resvg (social images), Vitest, Playwright, Docker, Coolify, and Claude Haiku 5.5 through the Anthropic SDK. Groq, Ollama and Gemini also work as providers. The typeface is Archivo, under the SIL Open Font License, served from this site.
 
 ## Run it locally
 
@@ -86,6 +96,7 @@ All settings are optional. See `.env.example`.
 | `NUXT_LLM_TIMEOUT_MS`, `NUXT_LLM_BUDGET_MS` | Limit per call, and for all calls together | 25000, 50000 |
 | `NUXT_DAILY_PAGE_LIMIT`, `NUXT_IP_DAILY_LIMIT` | Daily caps on the public upload | 100, 20 |
 | `NUXT_PUBLIC_SITE_URL` | Canonical origin | request origin |
+| `NUXT_PUBLIC_UMAMI_ORIGIN`, `NUXT_PUBLIC_UMAMI_WEBSITE_ID` | Turns on Umami analytics | off |
 
 ## Tests
 
@@ -107,7 +118,9 @@ The live site runs on a self-hosted Coolify server, built from the `Dockerfile`.
 3. Set `NUXT_PUBLIC_SITE_URL` and the LLM variables as runtime variables. Do not mark them as build variables, or the key ends up in the image.
 4. Use `/api/health` as the health check.
 
-To change the seeded pages, set the LLM variables and run `pnpm seed`.
+To add seeded pages, set the LLM variables and run `pnpm seed`. Existing pages are kept unless you add `--force`, which rewrites their copy with new model calls.
+
+After changing the logo run `pnpm brand`. After changing `design/tokens.json` run `pnpm tokens`.
 
 ## Limitations
 
@@ -116,4 +129,5 @@ To change the seeded pages, set the LLM variables and run `pnpm seed`.
 - Quota counters are read and then written, so they are a soft limit.
 - Files are limited to 2 MB and 1,000 rows.
 - Anyone can publish on the public demo, within the daily caps. A real deployment should add sign-in and an editorial review step before pages are indexed.
-- Every page shares one Open Graph image. Per-page images would improve social sharing.
+- The privacy and terms pages are a draft and have not had legal review.
+- Older browsers without the View Transitions API change page instantly. Nothing else is lost.

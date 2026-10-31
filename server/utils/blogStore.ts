@@ -22,7 +22,7 @@ export async function getBlog(slug: string): Promise<BlogDocument | null> {
   return await seeds().getItem<BlogDocument>(`${slug}.json`) ?? await uploads().getItem<BlogDocument>(`pages:${slug}.json`)
 }
 
-/** Summaries live in their own keys so listing never reads whole documents. */
+/** Summaries live in their own keys so listing never reads whole documents. Newest uploads come first, then the largest seeded pages. */
 export async function listBlogs(): Promise<BlogSummary[]> {
   const seedKeys = (await seeds().getKeys()).filter(k => k.endsWith('.json'))
   const seeded = await Promise.all(seedKeys.map(k => seeds().getItem<BlogDocument>(k)))
@@ -31,7 +31,7 @@ export async function listBlogs(): Promise<BlogSummary[]> {
   const keys = (await uploads().getKeys('summaries')).sort().reverse().slice(0, LIST_LIMIT)
   const uploaded = await Promise.all(keys.map(k => uploads().getItem<BlogSummary>(k)))
   return [...summaries, ...uploaded.flatMap(s => (s ? [s] : []))]
-    .sort((a, b) => Number(b.seeded) - Number(a.seeded) || b.generatedAt.localeCompare(a.generatedAt))
+    .sort((a, b) => Number(a.seeded) - Number(b.seeded) || (a.seeded ? b.rows - a.rows : 0) || b.generatedAt.localeCompare(a.generatedAt))
 }
 
 export async function uniqueSlug(base: string): Promise<string> {
@@ -64,11 +64,12 @@ export async function removeBlog(slug: string, token: string): Promise<boolean> 
   if (!isValidSlug(slug)) return false
   const stored = await uploads().getItem<string>(`owners:${slug}.json`)
   if (!stored || !timingSafeEqual(Buffer.from(stored, 'hex'), hashToken(token))) return false
-  const summaries = (await uploads().getKeys('summaries')).filter(key => key.endsWith(`-${slug}.json`))
+  const summaries = (await uploads().getKeys('summaries')).filter(key => key.slice(key.indexOf('-') + 1) === `${slug}.json`)
   await Promise.all([
     ...summaries.map(key => uploads().removeItem(key)),
     uploads().removeItem(`pages:${slug}.json`),
     uploads().removeItem(`owners:${slug}.json`),
+    uploads().removeItem(`og:${slug}.png`),
   ])
   return true
 }

@@ -1,6 +1,8 @@
 import type { CellValue, Dataset, TableColumn } from '../types/blog'
 import { formatCompact, formatExact, formatPercent } from '../pipeline/values'
 
+export { formatCount } from '../pipeline/values'
+
 export function formatMetric(value: number | null, dataset: Pick<Dataset, 'metric'>): string {
   if (value === null) return 'Not disclosed'
   const { metric } = dataset

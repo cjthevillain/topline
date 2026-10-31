@@ -1,7 +1,7 @@
 import type {
   AllowedNumbers, Breakdown, BreakdownRow, Dataset, DatasetRow, Insights, TableColumn, Tile, TopicContext,
 } from '../types/blog'
-import { bandOrder, formatCompact, formatPercent, isBand } from './values'
+import { bandOrder, formatCompact, formatCount, formatPercent, isBand } from './values'
 
 const MAX_BREAKDOWN_ROWS = 8
 const MAX_BREAKDOWNS = 4
@@ -25,7 +25,7 @@ export function computeInsights(dataset: Dataset, context: TopicContext): Insigh
   const money = (value: number) => (metric?.kind === 'percent' ? formatPercent(value) : formatCompact(value, metric?.currency ?? ''))
   const valued = rows.filter(r => r.metric !== null) as (DatasetRow & { metric: number })[]
   const noun = nounFor(context)
-  const tiles: Tile[] = [{ id: 'count', label: `${capitalise(noun)} ranked`, value: rows.length.toLocaleString('en-GB'), note: scopeNote(context) }]
+  const tiles: Tile[] = [{ id: 'count', label: `${capitalise(noun)} ranked`, value: formatCount(rows.length), note: scopeNote(context) }]
   const facts: string[] = [`The dataset covers ${rows.length} ${noun}.`]
   const allowed: AllowedNumbers = { money: [], percents: [], plain: [rows.length] }
 
@@ -40,7 +40,7 @@ export function computeInsights(dataset: Dataset, context: TopicContext): Insigh
     if (canSum) total = values.reduce((sum, v) => sum + v, 0)
 
     if (total !== null) {
-      tiles.push({ id: 'total', label: capitalise(`combined ${metric.label}`), value: money(total), note: `Across ${valued.length} ${noun}` })
+      tiles.push({ id: 'total', label: capitalise(`combined ${metric.label}`), value: money(total), note: `Across ${formatCount(valued.length)} ${noun}` })
       facts.push(`Combined ${metric.label} across ${valued.length} ${noun} is ${money(total)}.`)
       addMoney(total)
       allowed.plain.push(valued.length)
@@ -111,16 +111,16 @@ export function computeInsights(dataset: Dataset, context: TopicContext): Insigh
 
   const location = breakdowns.find(b => b.id === 'region')
   if (location?.rows[0] && location.rows[0].label !== 'Other') {
-    tiles.push({ id: 'region', label: `Based in ${location.rows[0].label}`, value: formatPercent(location.rows[0].share), note: `${location.rows[0].count} of ${rows.length} ${noun}` })
+    tiles.push({ id: 'region', label: `Based in ${location.rows[0].label}`, value: formatPercent(location.rows[0].share), note: `${formatCount(location.rows[0].count)} of ${formatCount(rows.length)} ${noun}` })
   }
   const sector = breakdowns.find(b => b.id === 'category')
   if (sector?.rows[0]) {
-    tiles.push({ id: 'category', label: 'Most common sector', value: `${sector.rows[0].count}`, note: sector.rows[0].label })
+    tiles.push({ id: 'category', label: 'Most common sector', value: formatCount(sector.rows[0].count), note: sector.rows[0].label })
   }
   const size = breakdowns.find(b => b.id === 'size')
   if (size?.rows.length) {
     const largest = [...size.rows].sort((a, b) => b.count - a.count)[0]!
-    tiles.push({ id: 'size', label: `Most common ${size.header.toLowerCase()}`, value: largest.label, note: `${largest.count} of ${rows.length} ${noun}` })
+    tiles.push({ id: 'size', label: `Most common ${size.header.toLowerCase()}`, value: largest.label, note: `${formatCount(largest.count)} of ${formatCount(rows.length)} ${noun}` })
   }
 
   const yearColumn = dataset.columns.find(c => c.kind === 'year')
@@ -129,7 +129,7 @@ export function computeInsights(dataset: Dataset, context: TopicContext): Insigh
     const mid = median(years)
     if (mid !== null && years.length >= 3) {
       const rounded = Math.round(mid)
-      tiles.push({ id: 'year', label: `Median ${yearColumn.header.toLowerCase()}`, value: String(rounded), note: `From ${years.length} ${noun}` })
+      tiles.push({ id: 'year', label: `Median ${yearColumn.header.toLowerCase()}`, value: String(rounded), note: `From ${formatCount(years.length)} ${noun}` })
       facts.push(`The median ${yearColumn.header.toLowerCase()} is ${rounded}. The earliest is ${Math.min(...years)} and the latest is ${Math.max(...years)}.`)
       allowed.plain.push(rounded, Math.min(...years), Math.max(...years))
     }

@@ -69,7 +69,7 @@ export function buildJsonLd(doc: BlogDocument, origin: string): object[] {
     'mainEntityOfPage': url,
     'datePublished': doc.provenance.generatedAt,
     'dateModified': doc.provenance.generatedAt,
-    'image': `${origin}/og.png`,
+    'image': `${origin}/og/${doc.slug}.png`,
     'inLanguage': 'en-GB',
     'keywords': doc.copy.keywords.join(', '),
     'articleSection': doc.context.topic,

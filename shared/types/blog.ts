@@ -224,4 +224,7 @@ export interface BlogSummary {
   generatedAt: string
   seeded: boolean
   mode: CopyMode
+  /** Older stored summaries do not have these two. */
+  headline?: { value: string; label: string }
+  rankedBy?: string | null
 }

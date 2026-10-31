@@ -4,20 +4,23 @@ export default defineNuxtConfig({
   compatibilityDate: '2026-10-01',
   devtools: { enabled: false },
   ssr: true,
+  experimental: { viewTransition: true },
   css: ['~/assets/css/tokens.css', '~/assets/css/base.css'],
 
   app: {
+    // Set here and not under experimental, where Nuxt 4.6 writes the word unquoted and the server fails to start.
+    // 'always' keeps a short crossfade for people who ask for less motion.
+    viewTransition: 'always',
     head: {
       htmlAttrs: { lang: 'en-GB' },
       titleTemplate: '%s',
-      meta: [{ name: 'theme-color', content: '#14161a' }],
+      meta: [{ name: 'theme-color', content: '#121417' }],
       link: [
         { rel: 'icon', href: '/favicon.ico', sizes: '32x32' },
         { rel: 'icon', href: '/favicon.svg', type: 'image/svg+xml' },
         { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' },
         { rel: 'manifest', href: '/site.webmanifest' },
-        { rel: 'preload', href: '/fonts/schibsted-grotesk.woff2', as: 'font', type: 'font/woff2', crossorigin: 'anonymous' },
-        { rel: 'preload', href: '/fonts/jetbrains-mono.woff2', as: 'font', type: 'font/woff2', crossorigin: 'anonymous' },
+        { rel: 'preload', href: '/fonts/archivo-latin.woff2', as: 'font', type: 'font/woff2', crossorigin: 'anonymous' },
       ],
     },
   },
@@ -54,7 +57,10 @@ export default defineNuxtConfig({
 
   nitro: {
     compressPublicAssets: true,
-    serverAssets: [{ baseName: 'seed', dir: fileURLToPath(new URL('./content', import.meta.url)) }],
+    serverAssets: [
+      { baseName: 'seed', dir: fileURLToPath(new URL('./content', import.meta.url)) },
+      { baseName: 'og', dir: fileURLToPath(new URL('./server/assets/og', import.meta.url)) },
+    ],
     storage: {
       blogs: { driver: 'fs', base: './.data/blogs' },
     },

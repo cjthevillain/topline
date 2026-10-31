@@ -35,7 +35,15 @@ export function baseSlug(analysis: Analysis): string {
   return slugify(phrase) || 'company-ranking'
 }
 
+/** The one number a page leads with: the combined total when it can be summed, otherwise the company count. */
+export function headlineTile(doc: Pick<BlogDocument, 'insights'>) {
+  const { tiles } = doc.insights
+  return tiles.find(tile => tile.id === 'total') ?? tiles[0]!
+}
+
 export function summarise(doc: BlogDocument): BlogSummary {
+  // Listed under a Total heading, so a page with nothing to sum has no value here.
+  const total = headlineTile(doc).id === 'total' ? headlineTile(doc) : undefined
   return {
     slug: doc.slug,
     title: doc.copy.h1,
@@ -45,5 +53,7 @@ export function summarise(doc: BlogDocument): BlogSummary {
     generatedAt: doc.provenance.generatedAt,
     seeded: doc.seeded,
     mode: doc.provenance.mode,
+    headline: total && { value: total.value, label: total.label },
+    rankedBy: doc.dataset.metric?.label ?? null,
   }
 }

@@ -1,6 +1,6 @@
 import type { AllowedNumbers, BlogCopy, BlogSection, FaqItem } from '../types/blog'
 import { findUngroundedNumbers } from './grounding'
-import { normaliseProse, truncateAtWord } from './text'
+import { headingCase, normaliseProse, truncateAtSentence } from './text'
 
 export interface CopyReview {
   /** Fields that passed. Anything absent falls back to the template. */
@@ -49,15 +49,15 @@ export function reviewCopy(reply: unknown, allowed: AllowedNumbers, currentYear:
   }
 
   const title = text(raw.title)
-  if (title && title.length >= 20 && title.length <= 70 && clean('title', title)) accepted.title = title
+  if (title && title.length >= 20 && title.length <= 70 && clean('title', title)) accepted.title = headingCase(title)
   else if (!title || title.length < 20 || title.length > 70) problems.push(`title must be 30 to 65 characters, got ${title?.length ?? 0}.`)
 
   const h1 = text(raw.h1)
-  if (h1 && h1.length <= 90 && clean('h1', h1)) accepted.h1 = h1
+  if (h1 && h1.length <= 90 && clean('h1', h1)) accepted.h1 = headingCase(h1)
 
   const meta = text(raw.metaDescription)
   if (meta && meta.length >= 100 && meta.length <= 175) {
-    if (clean('metaDescription', meta)) accepted.metaDescription = truncateAtWord(meta, 160)
+    if (clean('metaDescription', meta)) accepted.metaDescription = truncateAtSentence(meta, 160)
   }
   else problems.push(`metaDescription must be 120 to 158 characters, got ${meta?.length ?? 0}.`)
 
