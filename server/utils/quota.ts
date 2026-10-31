@@ -5,9 +5,14 @@ function today(): string {
   return new Date().toISOString().slice(0, 10)
 }
 
-/** IPs are hashed with the date, so nothing personal is stored and nothing lasts past the day. */
+/**
+ * IPs are hashed with the date, so nothing personal is stored and nothing lasts
+ * past the day. Behind Cloudflare the first forwarded address can be set by the
+ * caller, so its own header comes first. Faking either one only moves that
+ * caller's own count: the daily page limit still holds.
+ */
 function clientKey(event: H3Event): string {
-  const ip = getRequestIP(event, { xForwardedFor: true }) ?? 'unknown'
+  const ip = getRequestHeader(event, 'cf-connecting-ip') ?? getRequestIP(event, { xForwardedFor: true }) ?? 'unknown'
   return createHash('sha256').update(`${today()}:${ip}`).digest('hex').slice(0, 24)
 }
 

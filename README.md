@@ -2,8 +2,8 @@
 
 Topline turns a CSV of companies into an SEO-optimised, server-rendered blog page. It is built in Nuxt. Upload a dataset from any industry and it cleans the data, calculates the statistics, asks an LLM to write the copy, checks that copy against the data, and publishes a new page with no code change and no rebuild.
 
-- **Live demo:** to be added after deployment
-- **Example page:** `/blog/top-100-uk-seed-stage-fintech-companies-by-total-raised`
+- **Live demo:** https://topline.cjv.app
+- **Example page:** https://topline.cjv.app/blog/top-100-uk-seed-stage-fintech-companies-by-total-raised
 
 ## What it does
 
@@ -43,7 +43,7 @@ The same analysis code runs in the browser for the instant preview and on the se
 
 ## Tools used
 
-Nuxt 4, Vue 3, TypeScript, Papa Parse, Vitest, Playwright, Vercel Blob (uploads in production), and Claude Haiku 5.5 through the Anthropic SDK. Groq, Ollama and Gemini also work as providers.
+Nuxt 4, Vue 3, TypeScript, Papa Parse, Vitest, Playwright, Docker, Coolify, and Claude Haiku 5.5 through the Anthropic SDK. Groq, Ollama and Gemini also work as providers.
 
 ## Run it locally
 
@@ -100,11 +100,12 @@ pnpm typecheck
 
 ## Deploying
 
-Designed for Vercel's free Hobby plan, which detects Nuxt with no build configuration:
+The live site runs on a self-hosted Coolify server, built from the `Dockerfile`. To run your own copy:
 
-1. Import the repository.
-2. Create a Blob store in the project, which sets `BLOB_READ_WRITE_TOKEN`.
-3. Add the LLM variables as server-side environment variables.
+1. Create an application from this repository with the Dockerfile build pack and port 3000.
+2. Mount a volume at `/app/.data`, where uploaded pages and quota counters are stored.
+3. Set `NUXT_PUBLIC_SITE_URL` and the LLM variables as runtime variables. Do not mark them as build variables, or the key ends up in the image.
+4. Use `/api/health` as the health check.
 
 To change the seeded pages, set the LLM variables and run `pnpm seed`.
 
