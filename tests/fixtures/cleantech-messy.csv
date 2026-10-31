@@ -1,0 +1,23 @@
+Example cleantech export, made up for testing;;;;;
+Generated 30 Oct;;;;;
+Company Name;Location;Funding Stage;Employees;Total Funding;Website;Sectors
+GreenGrid;London;Series A;10-24;£12.5m;greengrid.example;Energy storage|Grid software
+SolarLoop;Glasgow;Series B;50-99;£48m;https://solarloop.example;Solar|Energy storage
+TideWorks;Aberdeen;Seed;<5;N/A;tideworks.example;Marine energy
+WindKin;Newcastle;Series A;25-49;£900k;windkin.example;Wind|Grid software
+;Bristol;Seed;5-9;£2m;noname.example;Solar
+CarbonNest;Leeds;Seed;10-24;unknown;javascript:alert(1);Carbon capture
+HeatBank;Sheffield;Series A;10-24;£7.25 million;heatbank.example;Heat|Energy storage
+SolarLoop;Glasgow;Series B;50-99;£48m;https://solarloop.example;Solar|Energy storage
+ReCell;Cardiff;Series C;100-249;£1.2bn;recell.example;Batteries|Recycling
+AmpFlow;London;Seed;5-9;abc123;ampflow.example;EV charging
+HydroPeak;Inverness;Series A;;$5m;hydropeak.example;Hydrogen
+Biogena;Norwich;Seed;5-9;-;biogena.example;Biofuels|Carbon capture
+Peatwise;Belfast;Seed;<5;£350,000;peatwise.example;Carbon capture
+Short Row Ltd;Exeter
+Too;Many;Cells;Here;And;More;Than;The;Header;Allows;Yes
+Company Name;Location;Funding Stage;Employees;Total Funding;Website;Sectors
+LoopGrid;Bath;Seed;5-9;£3m;loopgrid.example;Grid software
+Total;;;;£1.3bn;;
+Source: made-up data;;;;;;
+;;;;;;
