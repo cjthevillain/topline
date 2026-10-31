@@ -35,11 +35,21 @@ export default defineNuxtConfig({
     llmBudgetMs: 50000,
     dailyPageLimit: 100,
     ipDailyLimit: 20,
-    public: { siteUrl: '' },
+    public: { siteUrl: '', umamiOrigin: '', umamiWebsiteId: '' },
   },
 
   routeRules: {
-    '/blog': { redirect: { to: '/', statusCode: 301 } },
+    '/**': {
+      headers: {
+        'strict-transport-security': 'max-age=31536000; includeSubDomains',
+        'x-content-type-options': 'nosniff',
+        'x-frame-options': 'DENY',
+        'referrer-policy': 'strict-origin-when-cross-origin',
+        'permissions-policy': 'camera=(), microphone=(), geolocation=(), browsing-topics=()',
+        'cross-origin-opener-policy': 'same-origin',
+      },
+    },
+    '/fonts/**': { headers: { 'cache-control': 'public, max-age=31536000, immutable' } },
   },
 
   nitro: {

@@ -225,7 +225,7 @@ describe('structured data', () => {
   const graph = buildJsonLd(doc, 'https://x.example') as Record<string, any>[]
 
   it('describes the article, the 100 companies, the breadcrumb and the FAQ', () => {
-    expect(graph.map(g => g['@type'])).toEqual(['BlogPosting', 'ItemList', 'BreadcrumbList', 'FAQPage'])
+    expect(graph.map(g => g['@type'])).toEqual(['BlogPosting', 'ItemList', 'BreadcrumbList', 'FAQPage', 'Dataset'])
     expect(graph[1]!.itemListElement).toHaveLength(100)
     expect(graph[1]!.itemListElement[0]).toMatchObject({ position: 1, item: { name: 'Nevis' } })
   })

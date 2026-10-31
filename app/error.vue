@@ -15,7 +15,7 @@ useSeoMeta({ title: notFound.value ? `Page not found | ${BRAND.name}` : `Somethi
         <h1>{{ notFound ? 'We could not find that page' : 'Something went wrong' }}</h1>
         <p class="lede">{{ notFound ? 'It may have been removed, or the link may be wrong.' : 'Please try again in a moment.' }}</p>
         <div class="actions">
-          <NuxtLink to="/" class="pill">Back to all pages</NuxtLink>
+          <NuxtLink to="/blog" class="pill">See all rankings</NuxtLink>
           <NuxtLink to="/generate" class="pill pill--line">Generate a page</NuxtLink>
         </div>
       </div>

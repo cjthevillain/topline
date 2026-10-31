@@ -1,3 +1,4 @@
+import { createHash, randomBytes, timingSafeEqual } from 'node:crypto'
 import type { BlogDocument, BlogSummary } from '#shared/types/blog'
 import { summarise } from '#shared/pipeline/document'
 
@@ -45,4 +46,29 @@ export async function saveBlog(doc: BlogDocument): Promise<void> {
   const stamp = doc.provenance.generatedAt.replace(/\D/g, '')
   await uploads().setItem(`pages:${doc.slug}.json`, doc)
   await uploads().setItem(`summaries:${stamp}-${doc.slug}.json`, summarise(doc))
+}
+
+function hashToken(token: string): Buffer {
+  return createHash('sha256').update(token).digest()
+}
+
+/** The token is shown once, to the person who published. Only its hash is stored, apart from the page. */
+export async function issueRemovalToken(slug: string): Promise<string> {
+  const token = randomBytes(24).toString('base64url')
+  await uploads().setItem(`owners:${slug}.json`, hashToken(token).toString('hex'))
+  return token
+}
+
+/** Seeded pages have no owner record, so they can never be removed this way. */
+export async function removeBlog(slug: string, token: string): Promise<boolean> {
+  if (!isValidSlug(slug)) return false
+  const stored = await uploads().getItem<string>(`owners:${slug}.json`)
+  if (!stored || !timingSafeEqual(Buffer.from(stored, 'hex'), hashToken(token))) return false
+  const summaries = (await uploads().getKeys('summaries')).filter(key => key.endsWith(`-${slug}.json`))
+  await Promise.all([
+    ...summaries.map(key => uploads().removeItem(key)),
+    uploads().removeItem(`pages:${slug}.json`),
+    uploads().removeItem(`owners:${slug}.json`),
+  ])
+  return true
 }

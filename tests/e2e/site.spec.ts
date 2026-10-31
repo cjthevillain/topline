@@ -27,8 +27,8 @@ test.describe('server-rendered content, read with no JavaScript', () => {
     expect(html).toContain('Ledger Rocket')
     expect(html).toContain('£30,314,247')
     expect(html.match(/<th scope="row"/g)).toHaveLength(100)
-    const blocks = [...html.matchAll(/<script type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/g)].map(m => JSON.parse(m[1]!))
-    expect(blocks.map(b => b['@type'])).toEqual(['BlogPosting', 'ItemList', 'BreadcrumbList', 'FAQPage'])
+    const blocks = [...html.matchAll(/<script[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/g)].map(m => JSON.parse(m[1]!))
+    expect(blocks.map(b => b['@type'])).toEqual(['BlogPosting', 'ItemList', 'BreadcrumbList', 'FAQPage', 'Dataset'])
     expect(blocks[1].itemListElement).toHaveLength(100)
   })
 
@@ -53,9 +53,130 @@ test.describe('server-rendered content, read with no JavaScript', () => {
     expect((await request.get('/blog/..%2f..%2fetc')).status()).toBe(404)
   })
 
-  test('/blog redirects home', async ({ request }) => {
-    const response = await request.get('/blog', { maxRedirects: 0 })
-    expect(response.status()).toBe(301)
+  test('the rankings index is rendered on the server and lists every page', async ({ request }) => {
+    const html = await (await request.get('/blog')).text()
+    expect(html).toContain(`href="${FINTECH}"`)
+    expect(html).toContain('CollectionPage')
+  })
+
+  test('the sitemap lists the static pages', async ({ request }) => {
+    const sitemap = await (await request.get('/sitemap.xml')).text()
+    for (const path of ['/blog<', '/generate<', '/how-it-works<', '/privacy<', '/terms<']) expect(sitemap).toContain(path)
+  })
+
+  test('the feeds and well-known files answer with the right type', async ({ request }) => {
+    const feed = await request.get('/feed.xml')
+    expect(feed.headers()['content-type']).toContain('application/rss+xml')
+    expect(await feed.text()).toContain(FINTECH)
+    expect(await (await request.get('/llms.txt')).text()).toContain(FINTECH)
+    const security = await (await request.get('/.well-known/security.txt')).text()
+    expect(security).toContain('Contact: mailto:')
+    expect(security).toMatch(/Expires: \d{4}-/)
+  })
+
+  test('the ranking downloads as a CSV', async ({ request }) => {
+    const slug = FINTECH.split('/').pop()
+    const response = await request.get(`/data/${slug}.csv`)
+    expect(response.headers()['content-type']).toContain('text/csv')
+    expect(response.headers()['content-disposition']).toContain(`${slug}.csv`)
+    expect((await response.text()).split('\r\n')[1]).toContain('Nevis')
+    expect((await request.get('/data/does-not-exist.csv')).status()).toBe(404)
+    expect((await request.get(`/data/${slug}.txt`)).status()).toBe(404)
+  })
+
+  for (const path of ['/', '/blog', '/generate', '/how-it-works', '/privacy', '/terms', FINTECH]) {
+    test(`${path} has complete metadata`, async ({ request }) => {
+      const html = await (await request.get(path)).text()
+      const content = (name: string) => new RegExp(`<meta[^>]+(?:name|property)="${name}"[^>]+content="([^"]+)"`).exec(html)?.[1]
+      expect(html).toMatch(/<title>[^<]{10,70}<\/title>/)
+      expect(html).toMatch(/<link rel="canonical" href="[^"]*"/)
+      expect(content('description')?.length).toBeGreaterThan(50)
+      expect(content('description')?.length).toBeLessThanOrEqual(165)
+      expect(content('og:title')).toBeTruthy()
+      expect(content('og:url')).toBeTruthy()
+      expect(content('og:image')).toContain('http')
+      expect(content('og:image:alt')).toBeTruthy()
+      expect(content('og:locale')).toBe('en_GB')
+      expect(content('twitter:card')).toBe('summary_large_image')
+      expect(content('twitter:image')).toContain('http')
+    })
+  }
+})
+
+test.describe('security', () => {
+  test('every response carries the security headers, and no framework banner', async ({ request }) => {
+    for (const path of ['/', '/api/blogs', '/favicon.svg']) {
+      const headers = (await request.get(path)).headers()
+      expect(headers['x-content-type-options']).toBe('nosniff')
+      expect(headers['x-frame-options']).toBe('DENY')
+      expect(headers['strict-transport-security']).toContain('max-age=')
+      expect(headers['referrer-policy']).toBeTruthy()
+      expect(headers['permissions-policy']).toBeTruthy()
+    }
+    expect((await request.get('/')).headers()['x-powered-by']).toBeUndefined()
+  })
+
+  test('each page gets its own nonce, and every inline script carries it', async ({ request }) => {
+    const read = async () => {
+      const response = await request.get('/')
+      return { policy: response.headers()['content-security-policy'] ?? '', html: await response.text() }
+    }
+    const [first, second] = [await read(), await read()]
+    const nonce = /'nonce-([^']+)'/.exec(first.policy)?.[1]
+    expect(nonce).toBeTruthy()
+    expect(second.policy).not.toContain(nonce)
+    const scripts = first.html.match(/<script\b[^>]*>/g) ?? []
+    expect(scripts.length).toBeGreaterThan(0)
+    for (const tag of scripts) expect(tag).toContain(`nonce="${nonce}"`)
+  })
+
+  for (const path of ['/', '/blog', '/generate', FINTECH]) {
+    test(`${path} runs with no policy violations`, async ({ page }) => {
+      const problems: string[] = []
+      page.on('console', (message) => {
+        if (/content security policy/i.test(message.text())) problems.push(message.text())
+      })
+      await page.goto(path, { waitUntil: 'networkidle' })
+      expect(problems).toEqual([])
+      expect(await page.evaluate(() => document.documentElement.classList.contains('ready'))).toBe(true)
+    })
+  }
+})
+
+test.describe('removing a page', () => {
+  test('the person who published it can remove it, and it goes everywhere', async ({ page, request }) => {
+    await page.goto('/generate')
+    await page.getByRole('button', { name: 'an example healthtech file' }).click()
+    await page.getByLabel('Topic for the page').fill(`removal ${Date.now()}`)
+    await page.getByRole('button', { name: 'Generate page' }).click()
+    await page.waitForURL('**/blog/**')
+    const path = new URL(page.url()).pathname
+
+    await page.getByRole('button', { name: 'Remove this page' }).click()
+    await page.getByRole('button', { name: 'Remove for good' }).click()
+    await page.waitForURL('**/blog')
+    expect((await request.get(path)).status()).toBe(404)
+    expect(await (await request.get('/sitemap.xml')).text()).not.toContain(path)
+    expect(await (await request.get('/feed.xml')).text()).not.toContain(path)
+  })
+
+  test('a wrong token, or a seeded page, is refused', async ({ request }) => {
+    const created = await (await upload(request, 'ai.csv', fixture('ai-minimal.csv'), `token ${Date.now()}`)).json()
+    expect(created.removalToken.length).toBeGreaterThan(20)
+    const wrong = await request.delete(`/api/blogs/${created.slug}`, { data: { token: 'x'.repeat(32) } })
+    expect(wrong.status()).toBe(403)
+    expect((await request.get(created.url)).status()).toBe(200)
+    expect((await request.delete(`/api/blogs/${created.slug}`, { data: {} })).status()).toBe(403)
+    const seeded = await request.delete(`/api/blogs/${FINTECH.split('/').pop()}`, { data: { token: 'x' } })
+    expect(seeded.status()).toBe(403)
+    expect((await request.delete(`/api/blogs/${created.slug}`, { data: { token: created.removalToken } })).status()).toBe(204)
+    expect((await request.get(created.url)).status()).toBe(404)
+  })
+
+  test('the public document never contains the token', async ({ request }) => {
+    const created = await (await upload(request, 'ai.csv', fixture('ai-minimal.csv'), `secret ${Date.now()}`)).json()
+    const document = await (await request.get(`/api/blogs/${created.slug}`)).text()
+    expect(document).not.toContain(created.removalToken)
   })
 })
 
@@ -228,7 +349,9 @@ test.describe('daily caps', () => {
         multipart: { file: { name: 'ai.csv', mimeType: 'text/csv', buffer: fixture('ai-minimal.csv') } },
       })
       expect((await behindCloudflare('198.51.100.1')).status()).toBe(201)
-      expect((await behindCloudflare('198.51.100.2')).status()).toBe(429)
+      const limited = await behindCloudflare('198.51.100.2')
+      expect(limited.status()).toBe(429)
+      expect(Number(limited.headers()['retry-after'])).toBeGreaterThan(0)
     }
     finally {
       app.kill()

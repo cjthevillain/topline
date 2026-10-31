@@ -1,13 +1,12 @@
-function escapeXml(text: string): string {
-  return text.replace(/[<>&'"]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '\'': '&apos;', '"': '&quot;' })[c]!)
-}
+import { STATIC_PAGES } from '#shared/brand'
+import { escapeXml } from '#shared/seo/feed'
 
 export default defineEventHandler(async (event) => {
   const origin = siteOrigin(event)
   const blogs = await listBlogs()
   const newest = blogs.map(b => b.generatedAt).sort().at(-1)
   const urls = [
-    { loc: `${origin}/`, lastmod: newest },
+    ...STATIC_PAGES.map(path => ({ loc: `${origin}${path}`, lastmod: path === '/' || path === '/blog' ? newest : undefined })),
     ...blogs.map(b => ({ loc: `${origin}/blog/${b.slug}`, lastmod: b.generatedAt })),
   ]
   const body = urls

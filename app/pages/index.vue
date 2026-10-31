@@ -1,24 +1,14 @@
 <script setup lang="ts">
 import { BRAND } from '#shared/brand'
 import { findUngroundedNumbers } from '#shared/copy/grounding'
-import { buildJsonLd } from '#shared/seo/jsonld'
+import { buildJsonLd, serialiseJsonLd, siteJsonLd } from '#shared/seo/jsonld'
 import { formatMetric } from '#shared/ui/format'
 
 const { data: blogs } = await useFetch('/api/blogs', { default: () => [] })
 const origin = useSiteOrigin()
 
-const title = `${BRAND.name}: turn a company CSV into a ranked, search-ready page`
-useSeoMeta({
-  title,
-  description: BRAND.description,
-  ogTitle: title,
-  ogDescription: BRAND.description,
-  ogType: 'website',
-  ogSiteName: BRAND.name,
-  ogImage: `${origin}/og.png`,
-  twitterCard: 'summary_large_image',
-})
-useHead({ link: [{ rel: 'canonical', href: `${origin}/` }] })
+useSiteMeta({ title: `${BRAND.name}: turn company data into ranked pages`, description: BRAND.description, path: '/' })
+useHead({ script: siteJsonLd(origin).map(item => ({ type: 'application/ld+json', innerHTML: serialiseJsonLd(item) })) })
 
 const featured = computed(() => blogs.value.filter(b => b.seeded))
 const uploaded = computed(() => blogs.value.filter(b => !b.seeded))

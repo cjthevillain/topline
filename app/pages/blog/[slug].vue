@@ -9,26 +9,17 @@ if (!blog.value) throw createError({ statusCode: 404, statusMessage: 'Page not f
 
 const doc = blog.value
 const origin = useSiteOrigin()
-const url = `${origin}/blog/${doc.slug}`
 
-useSeoMeta({
+useSiteMeta({
   title: doc.copy.title,
   description: doc.copy.metaDescription,
-  ogTitle: doc.copy.title,
-  ogDescription: doc.copy.metaDescription,
-  ogType: 'article',
-  ogUrl: url,
-  ogSiteName: BRAND.name,
-  ogImage: `${origin}/og.png`,
-  ogImageAlt: doc.copy.h1,
-  twitterCard: 'summary_large_image',
-  articlePublishedTime: doc.provenance.generatedAt,
-  articleModifiedTime: doc.provenance.generatedAt,
-  robots: 'index, follow, max-snippet:-1',
+  path: `/blog/${doc.slug}`,
+  imageAlt: doc.copy.h1,
+  type: 'article',
+  publishedAt: doc.provenance.generatedAt,
 })
 
 useHead({
-  link: [{ rel: 'canonical', href: url }],
   script: buildJsonLd(doc, origin).map(item => ({ type: 'application/ld+json', innerHTML: serialiseJsonLd(item) })),
 })
 
@@ -179,7 +170,12 @@ onMounted(() => {
               <li>{{ copyLabel[doc.provenance.mode] }}<template v-if="doc.provenance.model"> ({{ doc.provenance.provider }}, {{ doc.provenance.model }})</template>.</li>
               <li v-for="warning in warnings" :key="warning.code">{{ warning.message }}</li>
             </ul>
+            <p class="small actions">
+              <a :href="`/data/${doc.slug}.csv`" download>Download this data as a CSV</a>
+              <a :href="`mailto:${BRAND.email}?subject=${encodeURIComponent(`Report: ${doc.slug}`)}`">Report this page</a>
+            </p>
           </aside>
+          <PageOwner v-if="!doc.seeded" :slug="doc.slug" />
         </div>
       </div>
     </div>
@@ -215,6 +211,7 @@ onMounted(() => {
 .faq h3 { font-size: 19px; }
 .faq p { margin-top: 6px; max-width: 66ch; }
 .source { padding: 24px 28px; border: 1px solid var(--line); border-radius: var(--radius-medium); background: var(--tint); }
+.source .actions { display: flex; flex-wrap: wrap; gap: var(--space-xs) var(--space-lg); margin-top: var(--space-sm); }
 .source ul { display: grid; gap: var(--space-xxs); margin-top: var(--space-xs); overflow-wrap: anywhere; }
 
 @media (min-width: 1100px) {

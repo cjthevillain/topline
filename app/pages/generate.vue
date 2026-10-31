@@ -5,8 +5,8 @@ import type { Analysis } from '#shared/pipeline/analyse'
 import { BRAND } from '#shared/brand'
 import { formatAmount } from '#shared/ui/format'
 
-const title = 'Generate a blog page from a CSV'
-useSeoMeta({ title: `${title} | ${BRAND.name}`, description: 'Upload a company CSV and generate a new SEO blog page, with no code changes.', robots: 'noindex, follow' })
+const title = 'Generate a ranking page from a CSV'
+useSiteMeta({ title: `${title} | ${BRAND.name}`, description: 'Upload a list of companies and publish a ranked page in seconds. You check what was found before anything goes live.', path: '/generate' })
 
 const MAPPED_ROLES: Role[] = ['name', 'metric', 'region', 'category', 'stage', 'size', 'website', 'description']
 
@@ -94,7 +94,8 @@ async function generate() {
   form.append('topic', topic.value)
   form.append('overrides', JSON.stringify(overrides.value))
   try {
-    const result = await $fetch<{ url: string }>('/api/blogs', { method: 'POST', body: form })
+    const result = await $fetch<{ slug: string; url: string; removalToken: string }>('/api/blogs', { method: 'POST', body: form })
+    saveRemovalToken(result.slug, result.removalToken)
     await navigateTo(result.url)
   }
   catch (failure) {
@@ -210,7 +211,7 @@ const progress = computed(() => [
           </div>
           <div class="go">
             <button type="submit" class="pill submit" :disabled="busy">{{ busy ? 'Writing your page' : 'Generate page' }}</button>
-            <p v-if="!busy" class="small muted">The page is live as soon as it is written, usually within a few seconds.</p>
+            <p v-if="!busy" class="small muted">The page is public as soon as it is written, usually within a few seconds. Only upload company data you are allowed to publish, and no personal data. See the <NuxtLink to="/terms">terms</NuxtLink>.</p>
           </div>
           <ol v-if="busy" class="progress" role="status" aria-live="polite">
             <li v-for="step in progress" :key="step.label" :class="`is-${step.state}`">
