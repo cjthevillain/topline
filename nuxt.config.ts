@@ -46,13 +46,8 @@ export default defineNuxtConfig({
     compressPublicAssets: true,
     serverAssets: [{ baseName: 'seed', dir: fileURLToPath(new URL('./content', import.meta.url)) }],
     storage: {
-      // Vercel has no writable disk, so uploads go to Blob there. The driver
-      // reads BLOB_READ_WRITE_TOKEN at runtime, so no secret is built in.
-      blogs: process.env.VERCEL
-        ? { driver: 'vercel-blob', access: 'public' }
-        : { driver: 'fs', base: './.data/blogs' },
+      blogs: { driver: 'fs', base: './.data/blogs' },
     },
-    vercel: { functions: { maxDuration: 60 } },
   },
 
   typescript: { strict: true },

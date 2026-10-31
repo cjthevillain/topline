@@ -221,6 +221,14 @@ test.describe('daily caps', () => {
       const blocked = await post()
       expect(blocked.status()).toBe(429)
       expect((await blocked.json()).data.code).toBe('ip_limit')
+
+      // Behind Cloudflare a caller is counted by its header, so changing the forwarded address does not help.
+      const behindCloudflare = (forwardedFor: string) => request.post(`${base}/api/blogs`, {
+        headers: { 'cf-connecting-ip': '203.0.113.9', 'x-forwarded-for': forwardedFor },
+        multipart: { file: { name: 'ai.csv', mimeType: 'text/csv', buffer: fixture('ai-minimal.csv') } },
+      })
+      expect((await behindCloudflare('198.51.100.1')).status()).toBe(201)
+      expect((await behindCloudflare('198.51.100.2')).status()).toBe(429)
     }
     finally {
       app.kill()
